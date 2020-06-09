@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	iq "github.com/rekki/go-query"
 
@@ -136,6 +137,22 @@ func prepare(root string) []*Art {
 	return out
 }
 
+func build(root string) *index.MemOnlyIndex {
+	t0 := time.Now()
+	ana := GetShinglesAnalyzer()
+	m := index.NewMemOnlyIndex(map[string]*analyzer.Analyzer{
+		"blob": ana,
+		"tags": ana,
+	})
+
+	list := prepare(root)
+	m.Index(toDocuments(list)...)
+
+	log.Printf("building from %v took %v", root, time.Since(t0))
+
+	return m
+}
+
 type PostMessage struct {
 	User    string   `json:"user"`
 	Channel string   `json:"channel"`
@@ -173,14 +190,13 @@ func main() {
 	root := flag.String("root", "./art", "folder")
 	flag.Parse()
 
-	ana := GetShinglesAnalyzer()
-	m := index.NewMemOnlyIndex(map[string]*analyzer.Analyzer{
-		"blob": ana,
-		"tags": ana,
-	})
-
-	list := prepare(*root)
-	m.Index(toDocuments(list)...)
+	m := build(*root)
+	go func() {
+		for {
+			time.Sleep(1 * time.Minute)
+			m = build(*root)
+		}
+	}()
 
 	r := gin.Default()
 
