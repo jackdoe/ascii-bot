@@ -153,12 +153,6 @@ func build(root string) *index.MemOnlyIndex {
 	return m
 }
 
-type PostMessage struct {
-	User    string   `json:"user"`
-	Channel string   `json:"channel"`
-	Blocks  []*Block `json:"blocks,omitempty"`
-}
-
 type SlackResponse struct {
 	ResponseType    string   `json:"response_type,omitempty"`
 	ReplaceOriginal bool     `json:"replace_original,omitempty"`
