@@ -195,7 +195,9 @@ func main() {
 	r := gin.Default()
 
 	search := func(qs string) *Art {
-		q := iq.DisMax(0.1, iq.Or(m.Terms("tags", qs)...), iq.Or(m.Terms("blob", qs)...))
+		terms := m.Terms("tags", qs)
+		terms = append(terms, m.Terms("blob", qs)...)
+		q := iq.And(terms...)
 
 		out := &Art{}
 		max := float32(0)
